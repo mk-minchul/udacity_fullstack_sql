@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import psycopg2
 
 
@@ -13,7 +15,17 @@ if __name__ == "__main__":
     GROUP BY title ORDER BY n_views DESC LIMIT 3;
     """
 
-    db = psycopg2.connect(database="news")
+
+    try:
+        db = psycopg2.connect(database="news")
+    except psycopg2.Error as e:
+        print ("Unable to connect!")
+        print (e.pgerror)
+        print (e.diag.message_detail)
+        sys.exit(1)
+    else:
+        print ("Connected!")
+
     c = db.cursor()
     c.execute(query)
     results = c.fetchall()
