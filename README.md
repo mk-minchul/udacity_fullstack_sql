@@ -20,7 +20,28 @@ $ vagrant ssh
 $ vagrant up
 ```
 
-# RUN
+3. Create DB
+
+```
+psql -d news -f newsdata.sql
+```
+
+3. Create Views in the DB for easier coding and db manipulation.
+
+```
+    CREATE VIEW error_count AS
+    SELECT to_char(log.time, 'Mon DD, YYYY') as day, count(*) as sum FROM log \n
+    where log.status NOT LIKE '200 OK' \n
+    GROUP BY day;
+``` 
+
+```
+    CREATE VIEW all_count AS
+    SELECT to_char(log.time, 'Mon DD, YYYY') as day, count(*) as sum FROM log \n
+    GROUP BY day;
+```
+
+# Run
 
 This python script will read newsdata.sql and print a statement in result.txt file that answers the three questions.
 1. What are the most popular three articles of all time?
@@ -28,7 +49,7 @@ This python script will read newsdata.sql and print a statement in result.txt fi
 3. On which days did more than 1% of requests lead to errors?
 
 Run with the following code. The question 3 needs views with error_count and all_count. 
-They will be created if the code has never been run before. The code will skip if the view already exists.
+
 
 ```
 cd into/the/current_dir

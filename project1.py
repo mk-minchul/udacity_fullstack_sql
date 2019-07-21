@@ -1,10 +1,39 @@
 #!/usr/bin/env python3
 
 import psycopg2
+import sys
+
+
+def connect(database_name="news"):
+    try:
+        db = psycopg2.connect("dbname={}".format(database_name))
+        cursor = db.cursor()
+        return db, cursor
+    except psycopg2.Error, e:
+        print ("Unable to connect!")
+        print (e.pgerror)
+        print (e.diag.message_detail)
+        sys.exit(1)
+
+def execute_query(db, cursor, query):
+    cursor.execute(query)
+    results = c.fetchall()
+    db.close()
+    return results
+
+def formatted_print(results, type="views"):
+    for result in results:
+        first, second = result
+        if type=="views":
+            print("    {} - {} views".format(first, second))
+        elif type=="error":
+            print("    {} - {} % error".format(first, second))
+        else:
+            raise ValueError
+    print("-" * 70)
 
 
 if __name__ == "__main__":
-
 
     # What are the most popular three articles of all time?
     # Present this information as a sorted list with the most popular article at the top.
@@ -15,23 +44,12 @@ if __name__ == "__main__":
     GROUP BY title ORDER BY n_views DESC LIMIT 3;
     """
 
+    db, c = connect()
+    results = execute_query(db, c, query)
 
-    try:
-        db = psycopg2.connect(database="news")
-    except psycopg2.Error as e:
-        print ("Unable to connect!")
-        print (e.pgerror)
-        print (e.diag.message_detail)
-        sys.exit(1)
-    else:
-        print ("Connected!")
+    print("Q1: What are the most popular three articles of all time?")
+    formatted_print(results)
 
-    c = db.cursor()
-    c.execute(query)
-    results = c.fetchall()
-    db.close()
-    print("Q1")
-    print(results)
 
     # Who are the most popular article authors of all time?
     query = """
@@ -42,59 +60,21 @@ if __name__ == "__main__":
     ORDER BY n_article DESC;
     """
 
-    db = psycopg2.connect(database="news")
-    c = db.cursor()
-    c.execute(query)
-    results = c.fetchall()
-    db.close()
-    print("Q2")
-    print(results)
+    db, c = connect()
+    results = execute_query(db, c, query)
+
+    print("Q2: Who are the most popular article authors of all time?")
+    formatted_print(results)
 
     # On which days did more than 1% of requests lead to errors?
-    view_create = """
-    CREATE VIEW error_count AS
-    SELECT to_char(log.time, 'Mon DD, YYYY') as day, count(*) as sum FROM log \n
-    where log.status NOT LIKE '200 OK' \n
-    GROUP BY day;
-    """
-    try:
-        # if the table doesnt exist
-        db = psycopg2.connect(database="news")
-        c = db.cursor()
-        c.execute(view_create)
-        db.commit()
-        db.close()
-    except:
-        # print("error_count view exits")
-        pass
-
-    view_create = """
-    CREATE VIEW all_count AS
-    SELECT to_char(log.time, 'Mon DD, YYYY') as day, count(*) as sum FROM log \n
-    GROUP BY day;
-    """
-    try:
-        db = psycopg2.connect(database="news")
-        c = db.cursor()
-        c.execute(view_create)
-        db.commit()
-        db.close()
-    except:
-        # print("all_count view exitss")
-        pass
-
-
     query = """
-    SELECT CAST(error_count.sum as NUMERIC) / CAST(all_count.sum as NUMERIC) * 100 as result from all_count \n
+    SELECT all_count.day, CAST(error_count.sum as NUMERIC) / CAST(all_count.sum as NUMERIC) * 100 as result from all_count \n
     JOIN error_count on error_count.day = all_count.day \n
     ORDER BY result desc limit 1;
     """
-    db = psycopg2.connect(database="news")
-    c = db.cursor()
-    c.execute(query)
-    results = c.fetchall()
-    db.close()
-    print("Q3")
-    print(results)
 
+    db, c = connect()
+    results = execute_query(db, c, query)
 
+    print("Q3: On which days did more than 1% of requests lead to errors?")
+    formatted_print(results, type="error")
