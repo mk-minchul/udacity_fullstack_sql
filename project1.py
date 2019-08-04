@@ -10,10 +10,11 @@ def connect(database_name="news"):
         cursor = db.cursor()
         return db, cursor
     except psycopg2.Error, e:
-        print ("Unable to connect!")
-        print (e.pgerror)
-        print (e.diag.message_detail)
+        print("Unable to connect!")
+        print(e.pgerror)
+        print(e.diag.message_detail)
         sys.exit(1)
+
 
 def execute_query(db, cursor, query):
     cursor.execute(query)
@@ -21,12 +22,13 @@ def execute_query(db, cursor, query):
     db.close()
     return results
 
+
 def formatted_print(results, type="views"):
     for result in results:
         first, second = result
-        if type=="views":
+        if type == "views":
             print("    {} - {} views".format(first, second))
-        elif type=="error":
+        elif type == "error":
             print("    {} - {} % error".format(first, second))
         else:
             raise ValueError
@@ -34,7 +36,6 @@ def formatted_print(results, type="views"):
 
 
 if __name__ == "__main__":
-
     # What are the most popular three articles of all time?
     # Present this information as a sorted list with the most popular article at the top.
 
@@ -49,7 +50,6 @@ if __name__ == "__main__":
 
     print("Q1: What are the most popular three articles of all time?")
     formatted_print(results)
-
 
     # Who are the most popular article authors of all time?
     query = """
